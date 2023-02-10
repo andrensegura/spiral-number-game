@@ -1,0 +1,6 @@
+db/
+logs/*
+__pycache__
+spongeconfig.py
+banlist.txt
+store_id.txt
