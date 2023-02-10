@@ -9,7 +9,8 @@ db = SpongeDB()
 owner = db.get_player_with_item("Custom Flair")
 if owner:
     db.remove_item("Custom Flair", owner)
-db.set_stock("Custom Flair")
+# Temporarily disabled while the Spiral Tower settles.
+#db.set_stock("Custom Flair")
 
 # SELECT STOCK
 db.select_store_stock()
@@ -57,6 +58,9 @@ for i in stock:
 
 parlor = r.subreddit(R_SUBREDDIT)
 submission = parlor.submit(title=title, selftext=body)
+
+# This should probably be moved to a value in the database.
+# That would mean also updating check_for_purchases.py
 with open("store_id.txt", 'w') as file:
     file.write(str(submission))
 
