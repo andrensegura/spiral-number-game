@@ -16,7 +16,7 @@ if owner:
 db.select_store_stock()
 
 # CREATE REDDIT POST
-title = 'SPONGE: Sunday Shop Open!'
+title = "STONE: Sunday Shop Open!"
 body = """
 # Welcome! What are ya buyin'?
 -----------------------
@@ -48,13 +48,13 @@ Welcome to the Sunday Shop. Use your accumulated suds to buy from a small select
 # The Goods
 ------------------------
 
-Item|Description|Cost
-:--|:--|--:
+Item|Description|Cost|Stock
+:--|:--|--:|--:
 """
 
 stock = db.get_forsale()
 for i in stock:
-    body += "{}|{}|{} o\n".format(i[1], i[3], i[2]) 
+    body += "{}|{}|{} o|{}\n".format(i[1], i[3], i[2],i[4]) 
 
 parlor = r.subreddit(R_SUBREDDIT)
 submission = parlor.submit(title=title, selftext=body)
