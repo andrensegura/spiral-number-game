@@ -1,7 +1,8 @@
-###############################################################
+#################################################################
 # This is a template for the configuration file.
 # Replace all of the variables with values you can use to test.
-###############################################################
+# ** Rename file to spongeconfig.py or else nothing will work.** 
+#################################################################
 
 # NCPs are users who do not play the game and should be
 # uncounted or removed.

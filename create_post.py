@@ -3,8 +3,14 @@ import sys
 from reddit_connect import r
 from spongedb import SpongeDB
 from spongelog import SpongeLog
-from spongeconfig import R_SUBREDDIT
+from spongeconfig import R_SUBREDDIT, YEET_BOT, NPC
 
+############################
+# Creates the weekly post.
+############################
+
+
+# Title of post supplied via command line argument.
 submission_title = str(sys.argv[1])
 
 log = SpongeLog("posts.log")
@@ -12,7 +18,10 @@ db = SpongeDB()
 
 parlor = r.subreddit(R_SUBREDDIT)
 
-db.remove_player('bibbleskit')
+# Remove NPCs before creating the post, just in case they got added during the last calculation.
+for n in NPC:
+    db.remove_player(n)
+    log.info("Removed NPC: " + n)
 
 body = """# Welcome to the Spiral Tower Number Extravaganza!
 

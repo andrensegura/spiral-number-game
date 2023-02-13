@@ -5,11 +5,13 @@ from spongedb import *
 
 log = SpongeLog("purchases.log")
 
+# Returns an item name if someone uses /buy
 def check_for_purchase(body):
     if body.startswith('/buy '):
         item = body.partition('\n')[0][5:]
         return item
 
+# Shows the item is no longer for sale in the post.
 def update_sold(post, item):
     new_body = post.selftext.replace(item, "~~" + item + "~~")
     post.edit(body=new_body)
@@ -21,15 +23,20 @@ def is_on_banlist(username):
         else:
             return False
 
+# banlist just keeps track of who has made a purchase this week.
+# It keeps users from buying multiple items. Perhaps this could
+# be kept in the database, instead of a flat file.
 def add_to_banlist(username):
     with open('banlist.txt', 'a') as banlist:
        banlist.write(username + '\n') 
 
+# This could also probably be a database value.
 post = ''
 with open('store_id.txt', 'r') as file:
     sub_id = file.readline()
     post = r.submission(id=sub_id)
 
+# Creates a queue of items and processes them after.
 purchases = []
 post.comments.replace_more(limit=None)
 for comment in post.comments.list():
@@ -37,9 +44,9 @@ for comment in post.comments.list():
     if item:
         purchases.append((item, comment.author.name, comment.id))
 
+# Processes the queue created earlier
+# Need to include logging for this. Would be easy to add.
 db = SpongeDB()
-#db.add_player('bibbleskit')
-#db.add_suds('bibbleskit', 2400)
 for p in purchases:
     try:
         if db.is_comment_added(p[2]):
