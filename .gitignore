@@ -1,5 +1,5 @@
 db/
-logs/*
+logs/
 __pycache__
 spongeconfig.py
 banlist.txt
