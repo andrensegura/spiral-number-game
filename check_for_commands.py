@@ -44,14 +44,13 @@ for comment in r.subreddit(R_SUBREDDIT).comments(limit=200):
             # respective command functions to clean this all up. Not sure why I didn't
             # do that earlier...
             if comment.body.startswith('/give'):
-               log.info("/give initiated -- {}: {}".format(comment.author.name, reply))
-
                # shlex is used to split strings up as if they were command line inputs.
                # /give "Item Name" username becomes:
                # ('/give', 'Item Name', 'username')
                cargs = shlex.split(comment.body) 
                reply = command_give_item(comment.author.name, cargs[1], cargs[2])
                comment.reply(reply)
+               log.info("/give initiated -- {}: {}".format(comment.author.name, reply))
 
                db.add_comment(comment.id)
                log.info("comment {} processed".format(comment.id))
@@ -59,11 +58,11 @@ for comment in r.subreddit(R_SUBREDDIT).comments(limit=200):
                db.save()
 
             if comment.body.startswith('/pay'):
-               log.info("/pay initiated -- {}: {}".format(comment.author.name, reply))
 
                cargs = shlex.split(comment.body)
                reply = command_pay(comment.author.name, int(cargs[1]), cargs[2])
                comment.reply(reply)
+               log.info("/pay initiated -- {}: {}".format(comment.author.name, reply))
 
                db.add_comment(comment.id)
                log.info("comment {} added".format(comment.id))
