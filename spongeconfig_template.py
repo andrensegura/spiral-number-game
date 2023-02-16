@@ -10,7 +10,7 @@ YEET_BOT = 'SpiralFlusher'
 NPC = [YEET_BOT, 'bibbleskit', 'AutoModerator']
 
 # Database connection variables
-DB_PATH = "/home/sparlor/sponge/db/sponge.db"
+DB_PATH = "/path/to/your/stone.db"
 
 # Reddit API credentials
 R_SUBREDDIT	= "Subreddit name without the /r/ (e.g. thespiraltower)"
