@@ -55,7 +55,7 @@ for p in purchases:
             db.add_comment(p[2])
             db.save()
             r.comment(p[2]).reply("You've already purchased an item.".format(p[0])) 
-            log.info("User already made purchase: {}".format(p[1])
+            log.info("User already made purchase: {}".format(p[1]))
             continue
         db.add_comment(p[2])
         db.purchase_item(p[0], p[1])
