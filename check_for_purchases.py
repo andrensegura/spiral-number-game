@@ -12,9 +12,27 @@ def check_for_purchase(body):
         return item
 
 # Shows the item is no longer for sale in the post.
-def update_sold(post, item):
-    new_body = post.selftext.replace(item, "~~" + item + "~~")
-    post.edit(body=new_body)
+def update_sold(post):
+    # Gets everything before the inventory section
+    body_pretext = post.selftext.split("The Goods",1)[0]
+    body_shop_text = """ The Goods
+------------------------
+
+Item|Description|Cost|Stock
+:--|:--|--:|--:
+"""
+
+    # Update the entire store with the current stock.
+    # Cross out the item name if it's not available.
+    stock = db.get_forsale()
+    for i in stock:
+        item_name = i[1]
+        if i[4] == 0:
+            item_name = "~~" + i[1] + "~~"
+        body_shop_text += "{}|{}|{} o|{}\n".format(item_name, i[3], i[2],i[4])
+
+    body_full = body_pretext + body_shop_text
+    post.edit(body=body_full)
 
 def is_on_banlist(username):
     with open('banlist.txt', 'r') as banlist:
@@ -61,7 +79,7 @@ for p in purchases:
         db.purchase_item(p[0], p[1])
         r.comment(p[2]).reply('Purchase of "{}" Successful!'.format(p[0]))
         log.info("Item purchased successfully: {}, {}".format(p[1], p[0]))
-        update_sold(post, p[0])
+        update_sold(post)
         add_to_banlist(p[1])
     except OutOfStockError:
         r.comment(p[2]).reply('Sorry, "{}" is out of stock.'.format(p[0]))
