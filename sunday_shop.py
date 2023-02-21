@@ -9,8 +9,7 @@ db = SpongeDB()
 owner = db.get_player_with_item("Custom Flair")
 if owner:
     db.remove_item("Custom Flair", owner)
-# Temporarily disabled while the Spiral Tower settles.
-#db.set_stock("Custom Flair")
+db.set_stock("Custom Flair")
 
 # SELECT STOCK
 db.select_store_stock()
