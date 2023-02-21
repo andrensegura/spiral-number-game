@@ -7,6 +7,8 @@ from spongeconfig import R_SUBREDDIT
 
 log = SpongeLog("commands.log")
 
+# New commands to be processed can be added here.
+
 def command_give_item(from_user, item, to_user):
     try:
         db.remove_item(item, from_user)
@@ -40,31 +42,25 @@ db = SpongeDB()
 for comment in r.subreddit(R_SUBREDDIT).comments(limit=200):
     if not db.is_comment_added(comment.id):
         if comment.body.startswith('/'):
-            # Was thinking the contents of these if statements should be put into their
-            # respective command functions to clean this all up. Not sure why I didn't
-            # do that earlier...
-            if comment.body.startswith('/give'):
-               # shlex is used to split strings up as if they were command line inputs.
-               # /give "Item Name" username becomes:
-               # ('/give', 'Item Name', 'username')
-               cargs = shlex.split(comment.body) 
-               reply = command_give_item(comment.author.name, cargs[1], cargs[2])
-               comment.reply(reply)
-               log.info("/give initiated -- {}: {}".format(comment.author.name, reply))
+            # shlex is used to split strings up as if they were command line inputs.
+            # /give "Item Name" username becomes:
+            # ('/give', 'Item Name', 'username')
+            cargs = shlex.split(comment.body)
+            # Record a success or error reply if necessary.
+            cmd_msg = ""
+            if cargs[0] == '/give':
+                cmd_msg = command_give_item(comment.author.name, cargs[1], cargs[2])
+                log.info("/give initiated -- {}: {}".format(comment.author.name, reply))
+            if cargs[0] == '/pay':
+                cmd_msg = command_pay(comment.author.name, int(cargs[1]), cargs[2])
+                log.info("/pay initiated -- {}: {}".format(comment.author.name, reply))
 
-               db.add_comment(comment.id)
-               log.info("comment {} processed".format(comment.id))
+            # properly processed command will get replied to.
+            # we also save the comment id in the db so that it doesn't get processed
+            # again. this also effectively disqualifies it for points.
+            if cmd_msg:
+                comment.reply(cmd_msg)
+                db.add_comment(comment.id)
+                log.info("comment {} added".format(comment.id))
 
-               db.save()
-
-            if comment.body.startswith('/pay'):
-
-               cargs = shlex.split(comment.body)
-               reply = command_pay(comment.author.name, int(cargs[1]), cargs[2])
-               comment.reply(reply)
-               log.info("/pay initiated -- {}: {}".format(comment.author.name, reply))
-
-               db.add_comment(comment.id)
-               log.info("comment {} added".format(comment.id))
-
-               db.save()
+            db.save()
