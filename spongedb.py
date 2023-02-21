@@ -158,11 +158,14 @@ class SpongeDB():
     #           Returns the username of the player who has the specified item.
     def get_player_with_item(self, item):
         item = self.get_item(item)
-        username = self.cur.execute(
+        usernames = self.cur.execute(
           "SELECT username FROM players WHERE inventory LIKE ? OR inventory LIKE ? OR inventory LIKE ?",
           (str(item[0]) + ",%", "%," + str(item[0]) + ",%", "%," + str(item[0]))
-        ).fetchone()
-        return username[0] if username else None
+        ).fetchall()
+        usernames = [x[0] for x in usernames]
+        if len(usernames) == 1:
+            usernames = usernames[0]
+        return usernames if usernames else None
 
     # Usage:    __alter_inventory('+' or '-', STRING, STRING)
     # Function: PRIVATE FUNCTION. Adds or removes the requested item from the player's inventory.
