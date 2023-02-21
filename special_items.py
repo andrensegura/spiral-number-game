@@ -26,7 +26,6 @@ def couch_goblin(db, username):
 
 def process_item_bonuses(db, comment):
     username = comment.author.name
-    items   = db.get_player(username, 'inventory')
 
     # Special Letters
     for letter in 'spiral':
