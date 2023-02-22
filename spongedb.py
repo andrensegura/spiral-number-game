@@ -1,6 +1,12 @@
 import sqlite3
 from spongeconfig import DB_PATH
 
+# Each function ends with:
+#     return True if result else False
+# The point was to imply that it ran successfully if it got a result.
+# However, I don't think it returns what I expected. I think getting
+# None would still be successful. Need to play with it and figure it out.
+
 #####################################
 # Custom error handling
 #####################################
@@ -337,8 +343,14 @@ class SpongeDB():
         ).fetchone()
         return True if result else False
 
+    # Usage:    remove_all_stock()
+    # Function: Zeroes out all items. There will be nothing in stock after running this.
+    def remove_all_stock(self):
+        result = self.cur.execute("UPDATE items SET forsale = 0;")
+        return True if result else False
+
     # Usage:    select_store_stock(INTEGER)
-    # Function: Returns a list of items available for sale. The integer provided
+    # Function: Sets items with stock > 0 as for sale. The integer provided
     #           is the limit for how many items will be sold in the shop.
     #           Assumes 50 if none supplied.
     def select_store_stock(self, limit=50):
@@ -347,6 +359,15 @@ class SpongeDB():
             "UPDATE items SET forsale = 1 WHERE primary_key in (SELECT primary_key FROM items WHERE stock > 0 ORDER BY primary_key LIMIT ?);",
             (limit,)
         ).fetchone()
+        return True if result else False
+
+    # Usage:    set_forsale()
+    # Function: Sets an item available for sale.
+    def set_forsale(self, item):
+        result = self.cur.execute(
+            "UPDATE items SET forsale = 1 WHERE name = ?;",
+            (item,)
+        ).fetchall()
         return True if result else False
 
     # Usage:    get_forsale()
