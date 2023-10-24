@@ -1,15 +1,18 @@
-#!/home/sparlor/python36/python
+#!/home/sparlor/bin/python
 from reddit_connect import r
 from spongelog import SpongeLog
 from spongedb import *
+from playerclass import Player
+from itemclass import Item
 
 log = SpongeLog("purchases.log")
 
 # Returns an item name if someone uses /buy
-def check_for_purchase(body):
+def get_item_from_buy_command(body: str) -> Item:
     if body.startswith('/buy '):
-        item = body.partition('\n')[0][5:]
-        return item
+        requested_item_name = body.partition('\n')[0][5:]
+        i = Item(requested_item_name)
+        return Item(requested_item_name)
 
 # Shows the item is no longer for sale in the post.
 def update_sold(post):
@@ -18,18 +21,41 @@ def update_sold(post):
     body_shop_text = """ The Goods
 ------------------------
 
+## Unlimited Items
+
 Item|Description|Cost|Stock
 :--|:--|--:|--:
 """
 
+    stock = db.get_forsale_unlimited()
+    for i in stock:
+        body_shop_text += f"{i['name']}|{i['description']}|{i['price']} o|{i['stock']}\n"
+
+    body_shop_text += """
+
+## Limited Items
+
+Item|Description|Cost|Stock
+:--|:--|--:|--:
+""" 
+
     # Update the entire store with the current stock.
     # Cross out the item name if it's not available.
     stock = db.get_forsale()
+    # sort stock by price
+    stock.sort(key = lambda i: i['price'], reverse = True)
+    # put out of stock items at bottom of list
+    instock = [x for x in stock if x['stock'] > 0]
+    nonstock = [x for x in stock if x['stock'] == 0]
+    stock = instock + nonstock
+
+    # create md format and cross out out of stock items.
     for i in stock:
-        item_name = i[1]
-        if i[4] == 0:
-            item_name = "~~" + i[1] + "~~"
-        body_shop_text += "{}|{}|{} o|{}\n".format(item_name, i[3], i[2],i[4])
+        # need a copy of the name
+        item_name = i['name']
+        if i['stock'] == 0:
+            item_name = f"~~{i['name']}~~"
+        body_shop_text += f"{item_name}|{i['description']}|{i['price']} o|{i['stock']}\n"
 
     body_full = body_pretext + body_shop_text
     post.edit(body=body_full)
@@ -55,38 +81,65 @@ with open('store_id.txt', 'r') as file:
     post = r.submission(id=sub_id)
 
 # Creates a queue of items and processes them after.
-purchases = []
+purchase_requests = []
 post.comments.replace_more(limit=None)
 for comment in post.comments.list():
-    item = check_for_purchase(comment.body)
-    if item:
-        purchases.append((item, comment.author.name, comment.id))
+    try:
+        item = get_item_from_buy_command(comment.body)
+        # None returned the comment doesn't start with /buy
+        if not item:
+            continue
+        purchase_requests.append({'item': item,
+                             'buyer_name': comment.author.name,
+                             'comment_id': comment.id
+                             }
+                        )
+    except ItemNonexistantError:
+        continue
 
 # Processes the queue created earlier
 # Need to include logging for this. Would be easy to add.
 db = SpongeDB()
-for p in purchases:
+for purchase in purchase_requests:
+    item = purchase['item']
+    buyer_name = purchase['buyer_name']
+    comment_id = purchase['comment_id']
+    
+    buyer = ''
     try:
-        if db.is_comment_added(p[2]):
+        buyer = Player(buyer_name)
+    except NoSuchPlayerError:
+        buyer = NewPlayer(buyer_name)
+
+    try:
+        buyer = Player(buyer_name)
+
+        if db.is_comment_added(comment_id):
             continue
-        if is_on_banlist(p[1]):
-            db.add_comment(p[2])
+        if item.is_limited and is_on_banlist(buyer.name):
+            db.add_comment(comment_id)
             db.save()
-            r.comment(p[2]).reply("You've already purchased an item.".format(p[0])) 
-            log.info("User already made purchase: {}".format(p[1]))
+            r.comment(comment_id).reply("You've already purchased a limited item.") 
+            log.info(f"User already made limited purchase: {buyer_name}")
             continue
-        db.add_comment(p[2])
-        db.purchase_item(p[0], p[1])
-        r.comment(p[2]).reply('Purchase of "{}" Successful!'.format(p[0]))
-        log.info("Item purchased successfully: {}, {}".format(p[1], p[0]))
-        update_sold(post)
-        add_to_banlist(p[1])
-    except OutOfStockError:
-        r.comment(p[2]).reply('Sorry, "{}" is out of stock.'.format(p[0]))
-    except ItemNonexistantError:
-        r.comment(p[2]).reply('"{}" isn\'t an item.'.format(p[0]))
-    except NotEnoughSudsError:
-        r.comment(p[2]).reply('Sorry, [you don\'t have enough suds]({}).'.format("https://spiral.bibbleskit.com/u/" + p[1]))
-    except NotForSaleError:
-        r.comment(p[2]).reply('Sorry, that item is not for sale.')
+
+
+        buyer.buy(item)
+        buyer.save()
+        item.save()
+
+        r.comment(comment_id).reply(f"Purchase of '{item.name}' Successful!")
+        log.info(f"Item purchased successfully: {buyer.name}, {item.name}")
+
+        db.add_comment(comment_id)
+
+        if item.is_limited:
+            add_to_banlist(buyer.name)
+    
+    except (OutOfStockError, ItemNonexistantError, NotEnoughSudsError, NotForSaleError) as error:
+        r.comment(comment_id).reply(f"> {error}")
+
+    db.add_comment(comment_id)
     db.save()
+
+update_sold(post)

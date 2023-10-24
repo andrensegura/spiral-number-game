@@ -1,4 +1,4 @@
-#!/home/sparlor/python36/python
+#!/home/sparlor/bin/python
 from reddit_connect import r
 from spongelog import SpongeLog
 from spongedb import SpongeDB
@@ -17,8 +17,12 @@ subs   = yeeter.submissions.new(limit=5)
 for sub in subs:
     for line in sub.selftext.split('\n'):
         if '*' in line:
-            log.info("Removed " + line[4:])
-            db.remove_player(line[4:])
+            try:
+                user = line.split('/')[1]
+                log.info("Removed " + user)
+                db.remove_player(user)
+            except Exception as e:
+                log.error("Failed to remove user. Entry line: " + str(e))
 
 # NPCs are removed, as well.
 for n in NPC:

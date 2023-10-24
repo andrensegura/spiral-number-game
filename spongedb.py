@@ -20,7 +20,19 @@ class NotEnoughSudsError(Exception):
 class ItemNonexistantError(Exception):
     pass
 
+class ItemAlreadyExistsError(Exception):
+    pass
+
 class NotForSaleError(Exception):
+    pass
+
+class NoSuchPlayerError(Exception):
+    pass
+
+class PlayerExistsError(Exception):
+    pass
+
+class ItemNotOwnedError(Exception):
     pass
 
 #####################################
@@ -30,6 +42,7 @@ class NotForSaleError(Exception):
 class SpongeDB():
     def __init__(self):
         self.con = sqlite3.connect(DB_PATH)
+        self.con.row_factory = sqlite3.Row
         self.cur = self.con.cursor()
 
     def save(self):
@@ -38,19 +51,19 @@ class SpongeDB():
     def close(self):
         self.con.close()
 
-    def query(self, statement):
-        return self.cur.execute(statement).fetchall()
+    def query(self, statement, params=()):
+        return self.cur.execute(statement, params).fetchall()
 
-    # Usage:    show_all(INTEGER)
+    # Usage:    show_all(column, INTEGER)
     # Function: Prints a reddit table formatted list of LIMIT users. If no limit is given,
     #           it will print all users.
-    def show_all(self, limit=-1):
-        result = self.cur.execute("SELECT * FROM players ORDER BY suds DESC LIMIT {}".format(limit)).fetchall()
+    def show_all(self, col, limit=-1):
+        result = self.cur.execute("SELECT username,{} FROM players ORDER BY {} DESC LIMIT {}".format(col,col,limit)).fetchall()
         output = ''
         for player in result:
             player = [str(x) for x in player]
             player[0] = '/u/' + player[0] + "^[[I](https://spiral.bibbleskit.com/u/" + player[0] + ")]"
-            output += '|'.join(player[:4])
+            output += '|'.join(player[:2])
             output += '\n'
         return output
 
@@ -71,18 +84,42 @@ class SpongeDB():
         # I don't like the string formatting necessary to make this work. Insecurity.
         # I would have like to use ("select ? from ... = ?", (columns, username))
         # but it sanitizes the columns, making it select the literal string.
-        result = self.cur.execute("SELECT {} FROM players WHERE username = ?".format(columns), (username,)).fetchone()
-        return(result)
+        result = self.cur.execute("SELECT {} FROM players WHERE username = ? COLLATE NOCASE".format(columns), (username,)).fetchone()
+        if not result:
+            raise NoSuchPlayerError(f"player '{username}' does not exist.")
+        return(dict(result))
 
     # Usage:    add_player(STRING)
     # Function: This adds the given STRING as a new player into the database. If the user
     #           already exists, then it is ignored.
     def add_player(self, username):
-        result = self.cur.execute(
-            "INSERT OR IGNORE INTO players (username,suds,bonus,penalty,inventory) VALUES (?,?,?,?,?)",
-            (username,0,0,0,'')
-        ).fetchone()
-        return True if result else False
+        try:
+            self.get_player(username)
+            raise PlayerExistsError(f"player by the name '{username}' exists.")
+        except NoSuchPlayerError:
+            self.cur.execute(
+                "INSERT OR IGNORE INTO players (username,suds,bonus,penalty,inventory,score_7d,dailysuds) VALUES (?,?,?,?,?,?,?)",
+                (username,0,0,0,'',0,0)
+            )
+            return self.get_player(username)
+
+    def update_player(self, suds, inventory_str, safemode_int, safemode_timer, name):
+        self.cur.execute(
+            "UPDATE players SET suds = ?, inventory = ?,\
+                            safemode = ?, safemode_timer = ?\
+            WHERE username = ?",
+                (suds, inventory_str,
+                safemode_int, safemode_timer,
+                name)
+            )
+
+    def update_item(self, itemid, name, price, description, stock, unlimited, forsale):
+        self.cur.execute(
+                "UPDATE items SET name = ?, price = ?, description = ?,\
+                    stock = ?, unlimited = ?, forsale = ?\
+                WHERE primary_key = ?",
+                (name, price, description, stock, unlimited, forsale, itemid)
+                )
 
     # Usage:    remove_player(STRING)
     # Function: Removes the player from the database.
@@ -125,6 +162,15 @@ class SpongeDB():
         ).fetchone()
         return True if result else False
 
+    # Usage:    add_score(STRING, INTEGER)
+    # Function: Increases the players daily score count by INTEGER
+    def add_score(self, username, amount):
+        result = self.cur.execute(
+            "UPDATE players set dailysuds = dailysuds + ? WHERE username = ?",
+            (amount, username)
+        ).fetchone()
+        return True if result else False
+
     # DEPRECATED
     def add_bonus(self, username, amount):
         result = self.cur.execute(
@@ -145,32 +191,39 @@ class SpongeDB():
     # Function: Returns the database info for an item.
     #           If the parameter given is a STRING, it will search for the item by name.
     #           If the parameter given is a INTEGER, it will search for the item by ID.
-    def get_item(self, item):
-        # Returns entire item row
+    def get_item(self, signifier: str | int) -> dict:
+        # Returns entire item row as a dictionary
         # e.g. (5, 'Broken Crown', 401, 'I remember this. Those were better days.', 1)
-        # 0: id, 1: name, 2: price, 3: description, 4: stock
-        if isinstance(item, str):
-            query = "SELECT * FROM items WHERE name = ?"
-        elif isinstance(item, int):
+        if isinstance(signifier, str):
+            query = "SELECT * FROM items WHERE name LIKE ? COLLATE NOCASE"
+        elif isinstance(signifier, int):
             query = "SELECT * FROM items WHERE primary_key = ?"
         else:
-            raise Exception("item must be type str or int", item)
+            raise Exception("item must be type str or int", signifier)
 
-        item_data = self.cur.execute(query, (item,)).fetchone()
-        return item_data
+        item_data = self.cur.execute(query, (signifier,)).fetchone()
+
+        if not item_data:
+            raise ItemNonexistantError(f"item '{signifier}' doesn't exist.")
+
+        return dict(item_data)
 
     # Usage:    get_player_with_item(STRING or INTEGER)
     # Function: See get_item() for more info about parameter.
     #           Returns the username of the player who has the specified item.
-    def get_player_with_item(self, item):
-        item = self.get_item(item)
+    def get_player_with_item(self, item_sig: str | int) -> list:
+        item = self.get_item(item_sig)
+        if not item:
+            raise ItemNonexistantError(f"item '{item_sig}' doesn't exist.")
+        item_id = item['primary_key']
         usernames = self.cur.execute(
-          "SELECT username FROM players WHERE inventory LIKE ? OR inventory LIKE ? OR inventory LIKE ?",
-          (str(item[0]) + ",%", "%," + str(item[0]) + ",%", "%," + str(item[0]))
+          "SELECT username FROM players WHERE inventory LIKE ? OR inventory LIKE ? OR inventory LIKE ? OR inventory = ?",
+          (str(item_id) + ",%",
+           "%," + str(item_id) + ",%",
+           "%," + str(item_id),
+           str(item_id))
         ).fetchall()
         usernames = [x[0] for x in usernames]
-        if len(usernames) == 1:
-            usernames = usernames[0]
         return usernames if usernames else None
 
     # Usage:    __alter_inventory('+' or '-', STRING, STRING)
@@ -203,7 +256,7 @@ class SpongeDB():
         self.__alter_inventory('+', item_name, username)
 
     # Usage:    remove_item(STRING, STRING)
-    # Function: Removes item to the user's inventory.
+    # Function: Removes item from the user's inventory.
     def remove_item(self, item_name, username):
         self.__alter_inventory('-', item_name, username)
 
@@ -215,10 +268,10 @@ class SpongeDB():
         item_data  = self.get_item(item)
         if not item_data:
             raise ItemNonexistantError("No item called '{}'.".format(item))
-        item_id    = item_data[0]
-        item_price = item_data[2]
-        item_stock = item_data[4]
-        item_forsale = item_data[5]
+        item_id    = item_data['primary_key']
+        item_price = item_data['price']
+        item_stock = item_data['stock']
+        item_forsale = item_data['forsale']
 
         # if item not in stock, can't sell it.
         if item_stock <= 0:
@@ -237,20 +290,23 @@ class SpongeDB():
         self.add_stock(item_id, -1)
         # deduct price
         self.add_suds(username, item_price * -1)
+        # add score
+        self.add_score(username, item_price / 10)
         # award item
         self.give_item(item_id, username)
         return True
 
     # Usage:    add_item(STRING, INTEGER, STRING, INTEGER)
     # Function: Adds a new item to the items database. If no INTEGER for stock is given, it will assume 1.
-    def add_item(self, name, price, description, stock = 1):
-        if self.get_item(name):
-            return False
-        result = self.cur.execute(
-            "INSERT INTO items (name, price, description, stock) VALUES (?, ?, ?, ?)",
-            (name, price, description, stock)
-        ).fetchone()
-        return True if result else False
+    def add_item(self, name, price, description, stock = 1, unlimited=0):
+        try:
+            self.get_item(name)
+            raise ItemAlreadyExistsError(f"item by the name '{name}' already exists.")
+        except ItemNonexistantError:
+            self.cur.execute(
+                "INSERT INTO items (name, price, description, stock, unlimited) VALUES (?, ?, ?, ?, ?)",
+                (name, price, description, stock, unlimited)
+            ).fetchone()
 
     # Usage:     delete_item(STRING or INTEGER)
     # Function:  Removes the requested item from the databse.
@@ -296,14 +352,26 @@ class SpongeDB():
         if not item_data:
             print("No item called '{}'.".format(item))
             return False
-        item_id    = item_data[0]
-        item_stock = item_data[4]
+        item_id    = item_data['primary_key']
+        item_stock = item_data['stock']
 
         result = self.cur.execute(
             "UPDATE items SET stock = ? WHERE primary_key = ?",
             (amount, item_id)
         ).fetchone()
         return True if result else False
+
+    def is_item_limited(self, item):
+        item_id = self.get_item(item)
+        if not item_id:
+            raise ItemNonexistantError("No item called '{}'.".format(item))
+        else:
+            item_id = item_id[0]
+        result = self.cur.execute(
+            "SELECT unlimited FROM items WHERE primary_key = ?",
+            (item_id,)
+        ).fetchone()
+        return False if result[0] else True
 
     # Usage:    is_submission_added(STRING)
     # Function: With the given submission ID, checks the database to see if it's been added.
@@ -377,6 +445,19 @@ class SpongeDB():
             "SELECT * FROM items WHERE forsale = 1;"
         ).fetchall()
         return result
+
+    def get_forsale_limited(self):
+        result = self.cur.execute(
+            "SELECT * FROM items WHERE forsale = 1 AND unlimited = 0;"
+        ).fetchall()
+        return result
+
+    def get_forsale_unlimited(self):
+        result = self.cur.execute(
+            "SELECT * FROM items WHERE forsale = 1 AND unlimited = 1;"
+        ).fetchall()
+        return result
+
 
     # Usage:    update_stats(STRING, INTEGER)
     # Function: Adds suds to item statistics totals.

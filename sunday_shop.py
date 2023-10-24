@@ -1,15 +1,31 @@
-#!/home/sparlor/python36/python
+#!/home/sparlor/bin/python
 from reddit_connect import r
 from spongedb import SpongeDB
 from spongeconfig import R_SUBREDDIT
+from playerclass import Player
+from itemclass import Item
 
 db = SpongeDB()
 
 # RESET CUSTOM FLAIR
-owner = db.get_player_with_item("Custom Flair")
-if owner:
-    db.remove_item("Custom Flair", owner)
+custom_flair = Item('custom flair')
+if custom_flair.ownedby():
+    owner = Player(custom_flair.ownedby()[0])
+    owner - custom_flair
+#owner = db.get_player_with_item("Custom Flair")[0]
+#if owner:
+#    db.remove_item("Custom Flair", owner)
 db.set_stock("Custom Flair")
+
+# SET UNLIMITED ITEM STOCK
+db.set_stock("Bag o' Tricks", 25)
+db.set_stock("Floor Floosher 4000", 5)
+db.set_stock("Towering Tool Belt", 5)
+db.set_stock("Hunky DTI Poster", 10)
+db.set_stock("Sexy Sinjury Poster", 10)
+db.set_stock("How To Spiral 101", 10)
+db.set_stock("Tower Rations", 10)
+
 
 # SELECT STOCK
 db.select_store_stock()
@@ -22,10 +38,11 @@ body = """
 
 Welcome to the Sunday Shop. Use your accumulated suds to buy from a small selection of items each Sunday!
 
-[What is SPONGE? How do I get points? Click here.](https://www.reddit.com/r/TheSpiralParlor/comments/wmpjyi/sponge_version_update_and_hotfix/)
+* [What is STONE? How do I gain points/pebbles?](https://spiral.bibbleskit.com/about)
 
-[Check out the leaderboard and your own stats on the website!](https://spiral.bibbleskit.com)
+* [Check out the leaderboard and your own stats on the website!](https://spiral.bibbleskit.com/leaderboard)
 
+* [Commands list.](https://spiral.bibbleskit.com/commands)
 
 ### How it works:
 --------------------------
@@ -36,24 +53,60 @@ Welcome to the Sunday Shop. Use your accumulated suds to buy from a small select
 
 * **First come first serve**.
 
-* Limit one purchase per user. You can't just buy the whole shop.
+* Unlimited Section: You can buy as many things as you want from here.
 
-* (\*) **You can sell your items to others**. You can set the price, it's yours now. When the sale is finalized, please ping me in the discussion so I can perform the item/suds transfer.
+* Limited Section: You can buy only ONE item from this section each week.
 
 * The shop will appear at a random time on Sunday each week, so that the same people don't always get there first.
 
-* The things in this list starting with **(\*)** will eventually become automated through the website (once I have the time).
+* The shop remains active all week, until the next shop opens.
+
+
+### Commands:
+--------------------------
+
+**/buy**
+
+    /buy <Item Name>
+    
+    e.g.: /buy Sword of Regret
+
+**/pay**
+
+    /pay <amount> <username>
+    
+    e.g.: /pay 200 bibbleskit
+
+**/give**
+
+    /give "<Item Name>" <username>
+    
+    e.g.: /give "Sword of Regret" bibbleskit
 
 # The Goods
 ------------------------
+
+## Unlimited Items
 
 Item|Description|Cost|Stock
 :--|:--|--:|--:
 """
 
-stock = db.get_forsale()
+stock = db.get_forsale_unlimited()
 for i in stock:
     body += "{}|{}|{} o|{}\n".format(i[1], i[3], i[2],i[4]) 
+
+body += """
+
+## Limited Items
+
+Item|Description|Cost|Stock
+:--|:--|--:|--:
+"""
+stock = db.get_forsale_limited()
+for i in stock:
+    body += "{}|{}|{} o|{}\n".format(i[1], i[3], i[2],i[4])
+
 
 parlor = r.subreddit(R_SUBREDDIT)
 submission = parlor.submit(title=title, selftext=body)

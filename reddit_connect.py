@@ -8,3 +8,5 @@ r = praw.Reddit(
     user_agent=R_USER_AGENT,
     username=R_USERNAME,
 )
+
+r.validate_on_submit = True

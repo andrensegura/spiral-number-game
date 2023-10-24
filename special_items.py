@@ -1,4 +1,4 @@
-#!/home/sparlor/python36/python
+#!/home/sparlor/bin/python
 import random
 from spongelog import SpongeLog
 
@@ -29,9 +29,9 @@ def process_item_bonuses(db, comment):
 
     # Special Letters
     for letter in 'spiral':
-        owner = db.get_player_with_item('The Letter ' + letter.upper())
+        owner = db.get_player_with_item('The Letter ' + letter.upper())[0]
         item_letter(db, owner, letter, comment.body)
 
     # Couch Goblin Grog
-    if username == db.get_player_with_item('Couch Goblin'):
+    if username == db.get_player_with_item('Couch Goblin')[0]:
         couch_goblin(db, username)
