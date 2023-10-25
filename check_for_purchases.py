@@ -119,7 +119,7 @@ for purchase in purchase_requests:
         if item.is_limited and is_on_banlist(buyer.name):
             db.add_comment(comment_id)
             db.save()
-            r.comment(comment_id).reply("You've already purchased a limited item.") 
+            r.comment(comment_id).reply("> You've already purchased a limited item.") 
             log.info(f"User already made limited purchase: {buyer_name}")
             continue
 
@@ -128,7 +128,7 @@ for purchase in purchase_requests:
         buyer.save()
         item.save()
 
-        r.comment(comment_id).reply(f"Purchase of '{item.name}' Successful!")
+        r.comment(comment_id).reply(f"> Purchase of '{item.name}' Successful!")
         log.info(f"Item purchased successfully: {buyer.name}, {item.name}")
 
         db.add_comment(comment_id)

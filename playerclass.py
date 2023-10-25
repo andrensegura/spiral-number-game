@@ -23,7 +23,7 @@ class Player:
         if db_entry['inventory']:
             self._inventory = [Item(int(x)) for x in db_entry['inventory'].split(',')]
         #self._score = db_entry['score_7d']
-        #self._dailysuds = db_entry['dailysuds']
+        self._dailysuds = db_entry['dailysuds']
         self._safemode = db_entry['safemode']
         self._safemode_timer = db_entry['safemode_timer']
 
@@ -34,6 +34,14 @@ class Player:
     @property
     def suds(self) -> int:
         return self._suds
+
+    @property
+    def dailysuds(self) -> int:
+        return self._dailysuds
+
+    @dailysuds.setter
+    def dailysuds(self, value):
+        self._dailysuds = value
 
     @property
     def safemode(self) -> bool:
@@ -107,7 +115,7 @@ class Player:
     def save(self):
         db = spongedb.SpongeDB()
         db.update_player(self._suds, self.inventory_string(), int(self.safemode),
-                         self._safemode_timer, self._name)
+                         self._safemode_timer, self._dailysuds, self._name)
         db.save()
         db.close()
 

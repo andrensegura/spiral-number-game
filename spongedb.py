@@ -103,13 +103,15 @@ class SpongeDB():
             )
             return self.get_player(username)
 
-    def update_player(self, suds, inventory_str, safemode_int, safemode_timer, name):
+    def update_player(self, suds, inventory_str, safemode_int, safemode_timer, dailysuds, name):
         self.cur.execute(
             "UPDATE players SET suds = ?, inventory = ?,\
-                            safemode = ?, safemode_timer = ?\
+                            safemode = ?, safemode_timer = ?,\
+                            dailysuds = ?\
             WHERE username = ?",
                 (suds, inventory_str,
                 safemode_int, safemode_timer,
+                dailysuds,
                 name)
             )
 

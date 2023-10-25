@@ -1,6 +1,7 @@
 #!/home/sparlor/bin/python
 import random
 from spongelog import SpongeLog
+from itemclass import Item
 
 log = SpongeLog("calculatepoints.log")
 
@@ -25,13 +26,14 @@ def couch_goblin(db, username):
         log.info("couch goblin found {} suds!".format(points))
 
 def process_item_bonuses(db, comment):
-    username = comment.author.name
-
     # Special Letters
     for letter in 'spiral':
-        owner = db.get_player_with_item('The Letter ' + letter.upper())[0]
-        item_letter(db, owner, letter, comment.body)
+        list_of_owners = Item(f"the letter {letter}").ownedby()
+        if not list_of_owners:
+            continue
+        for owner in Item(f"the letter {letter}").ownedby():
+            item_letter(db, owner, letter, comment.body)
 
     # Couch Goblin Grog
-    if username == db.get_player_with_item('Couch Goblin')[0]:
-        couch_goblin(db, username)
+    if comment.author.name in Item('couch goblin').ownedby():
+        couch_goblin(db, comment.author.name)
