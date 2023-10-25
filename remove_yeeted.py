@@ -29,6 +29,5 @@ for n in NPC:
     db.remove_player(n)
     log.info("Removed NPC: " + n)
 
-# test comment
 db.save()
 db.close()
