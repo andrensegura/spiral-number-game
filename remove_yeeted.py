@@ -3,6 +3,7 @@ from reddit_connect import r
 from spongelog import SpongeLog
 from spongedb import SpongeDB
 from spongeconfig import YEET_BOT, NPC
+from playerclass import Player
 
 log = SpongeLog("yeeted.log")
 db = SpongeDB()
@@ -18,9 +19,11 @@ for sub in subs:
     for line in sub.selftext.split('\n'):
         if '*' in line:
             try:
-                user = line.split('/')[1]
-                log.info("Removed " + user)
-                db.remove_player(user)
+                username = line.split('/')[1]
+                player =  Player(username)
+                log.info(f"Player removed: \{'name': {player.name}, 'suds': {player.suds}, 'inventory': {player.inventory_string()}\}")
+                player.flush()
+                del(player)
             except Exception as e:
                 log.error("Failed to remove user. Entry line: " + str(e))
 
