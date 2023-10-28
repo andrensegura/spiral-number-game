@@ -13,6 +13,7 @@ class Item:
         self._unlimited = db_entry['unlimited']
         self._stock = db_entry['stock']
         self._forsale = db_entry['forsale']
+        self._tags = db_entry['tags'].split(',')
         db.close()
 
     @property
@@ -59,10 +60,22 @@ class Item:
             raise spongedb.OutOfStockError(f"Not enough stock for item '{self._name}'.")
         self._stock = value
 
+    @property
+    def tags(self):
+        return self._tags
+
+    @tags.setter
+    def tags(self, value):
+        if not isinstance(value, list):
+            raise ValueError(f"Item.tags must be a list")
+        self._tags = value
+
     def save(self):
+        tags = ",".join(self._tags)
+
         db = spongedb.SpongeDB()
         db.update_item(self._id, self._name, self._price, self._description,
-                       self._stock, self._unlimited, self._forsale)
+                       self._stock, self._unlimited, self._forsale, tags)
         db.save()
         db.close()
 
@@ -73,9 +86,9 @@ class Item:
 
 class NewItem(Item):
 
-    def __init__(self, name, price, desc, stock=1, unlimited=0, save=True):
+    def __init__(self, name, price, desc, stock=1, unlimited=0, save=True, tags=[]):
         db = spongedb.SpongeDB()
-        db.add_item(name, price, desc, stock, unlimited)
+        db.add_item(name, price, desc, stock, unlimited, tags)
         db_entry = db.get_item(name)
         if save:
             db.save()
