@@ -13,7 +13,7 @@ class Item:
         self._unlimited = db_entry['unlimited']
         self._stock = db_entry['stock']
         self._forsale = db_entry['forsale']
-        self._tags = db_entry['tags'].split(',')
+        self._tags = db_entry['tags'].split(',') if db_entry['tags'] else []
         db.close()
 
     @property
