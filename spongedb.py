@@ -115,12 +115,12 @@ class SpongeDB():
                 name)
             )
 
-    def update_item(self, itemid, name, price, description, stock, unlimited, forsale):
+    def update_item(self, itemid, name, price, description, stock, unlimited, forsale, tags):
         self.cur.execute(
                 "UPDATE items SET name = ?, price = ?, description = ?,\
-                    stock = ?, unlimited = ?, forsale = ?\
+                    stock = ?, unlimited = ?, forsale = ?, tags = ?\
                 WHERE primary_key = ?",
-                (name, price, description, stock, unlimited, forsale, itemid)
+                (name, price, description, stock, unlimited, forsale, tags, itemid)
                 )
 
     # Usage:    remove_player(STRING)
@@ -209,6 +209,15 @@ class SpongeDB():
             raise ItemNonexistantError(f"item '{signifier}' doesn't exist.")
 
         return dict(item_data)
+
+    def get_items_with_tag(self, tag: str) -> list:
+        items = self.cur.execute(
+                "SELECT primary_key FROM items\
+                WHERE tags LIKE ?",
+                (f"%{tag}%",)
+                ).fetchall()
+        return [x[0] for x in items]
+
 
     # Usage:    get_player_with_item(STRING or INTEGER)
     # Function: See get_item() for more info about parameter.
@@ -300,14 +309,14 @@ class SpongeDB():
 
     # Usage:    add_item(STRING, INTEGER, STRING, INTEGER)
     # Function: Adds a new item to the items database. If no INTEGER for stock is given, it will assume 1.
-    def add_item(self, name, price, description, stock = 1, unlimited=0):
+    def add_item(self, name, price, description, stock = 1, unlimited=0, tags=''):
         try:
             self.get_item(name)
             raise ItemAlreadyExistsError(f"item by the name '{name}' already exists.")
         except ItemNonexistantError:
             self.cur.execute(
-                "INSERT INTO items (name, price, description, stock, unlimited) VALUES (?, ?, ?, ?, ?)",
-                (name, price, description, stock, unlimited)
+                "INSERT INTO items (name, price, description, stock, unlimited, tags) VALUES (?, ?, ?, ?, ?, ?)",
+                (name, price, description, stock, unlimited, tags)
             ).fetchone()
 
     # Usage:     delete_item(STRING or INTEGER)
