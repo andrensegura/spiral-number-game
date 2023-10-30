@@ -12,23 +12,17 @@ custom_flair = Item('custom flair')
 if custom_flair.ownedby():
     owner = Player(custom_flair.ownedby()[0])
     owner - custom_flair
+    owner.save()
 #owner = db.get_player_with_item("Custom Flair")[0]
 #if owner:
 #    db.remove_item("Custom Flair", owner)
-db.set_stock("Custom Flair")
-
-# SET UNLIMITED ITEM STOCK
-db.set_stock("Bag o' Tricks", 25)
-db.set_stock("Floor Floosher 4000", 5)
-db.set_stock("Towering Tool Belt", 5)
-db.set_stock("Hunky DTI Poster", 10)
-db.set_stock("Sexy Sinjury Poster", 10)
-db.set_stock("How To Spiral 101", 10)
-db.set_stock("Tower Rations", 10)
-
+custom_flair.stock = 1
+custom_flair.save()
 
 # SELECT STOCK
-db.select_store_stock()
+db = SpongeDB()
+store_item_ids = db.get_items_with_tag('general')
+db.close()
 
 # CREATE REDDIT POST
 title = "STONE: Sunday Shop Open!"
@@ -36,7 +30,7 @@ body = """
 # Welcome! What are ya buyin'?
 -----------------------
 
-Welcome to the Sunday Shop. Use your accumulated suds to buy from a small selection of items each Sunday!
+Welcome to the Sunday Shop. Use your accumulated pebbles to buy from a small selection of items each Sunday!
 
 * [What is STONE? How do I gain points/pebbles?](https://spiral.bibbleskit.com/about)
 
@@ -47,41 +41,13 @@ Welcome to the Sunday Shop. Use your accumulated suds to buy from a small select
 ### How it works:
 --------------------------
 
-* **Simply leave a top level comment like so:** `/buy The North Star`
-
-* **NOTE**: It must be the exact name. For example, if the item is `Evil's Bane`, then none of these will work: `evils bane`, `Evils Bane`.
-
-* **First come first serve**.
+* **Simply leave a top level comment like so:** `/buy The North Star`. Item names are not case sensitive, but you have to use the proper quotation marks if it's in the name: `'` or `"`
 
 * Unlimited Section: You can buy as many things as you want from here.
 
 * Limited Section: You can buy only ONE item from this section each week.
 
-* The shop will appear at a random time on Sunday each week, so that the same people don't always get there first.
-
 * The shop remains active all week, until the next shop opens.
-
-
-### Commands:
---------------------------
-
-**/buy**
-
-    /buy <Item Name>
-    
-    e.g.: /buy Sword of Regret
-
-**/pay**
-
-    /pay <amount> <username>
-    
-    e.g.: /pay 200 bibbleskit
-
-**/give**
-
-    /give "<Item Name>" <username>
-    
-    e.g.: /give "Sword of Regret" bibbleskit
 
 # The Goods
 ------------------------
@@ -92,9 +58,9 @@ Item|Description|Cost|Stock
 :--|:--|--:|--:
 """
 
-stock = db.get_forsale_unlimited()
-for i in stock:
-    body += "{}|{}|{} o|{}\n".format(i[1], i[3], i[2],i[4]) 
+unlimited_items = [Item(x) for x in store_item_ids if Item(x).is_unlimited]
+for item in unlimited_items:
+    body += f"{item.name}|{item.description}|{item.price} o|{item.stock}\n"
 
 body += """
 
@@ -103,9 +69,11 @@ body += """
 Item|Description|Cost|Stock
 :--|:--|--:|--:
 """
-stock = db.get_forsale_limited()
-for i in stock:
-    body += "{}|{}|{} o|{}\n".format(i[1], i[3], i[2],i[4])
+
+limited_items   = [Item(x) for x in store_item_ids if Item(x).is_limited]
+for item in limited_items:
+    if item.is_for_sale:
+        body += f"{item.name}|{item.description}|{item.price} o|{item.stock}\n"
 
 
 parlor = r.subreddit(R_SUBREDDIT)
@@ -115,7 +83,3 @@ submission = parlor.submit(title=title, selftext=body)
 # That would mean also updating check_for_purchases.py
 with open("store_id.txt", 'w') as file:
     file.write(str(submission))
-
-
-db.save()
-db.close()
