@@ -87,6 +87,7 @@ class Item:
 class NewItem(Item):
 
     def __init__(self, name, price, desc, stock=1, unlimited=0, save=True, tags=[]):
+        tags = ','.join(tags)
         db = spongedb.SpongeDB()
         db.add_item(name, price, desc, stock, unlimited, tags)
         db_entry = db.get_item(name)
