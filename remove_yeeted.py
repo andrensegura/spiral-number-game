@@ -1,12 +1,10 @@
 #!/home/sparlor/bin/python
 from reddit_connect import r
 from spongelog import SpongeLog
-from spongedb import SpongeDB
 from spongeconfig import YEET_BOT, NPC
 from playerclass import Player
 
 log = SpongeLog("yeeted.log")
-db = SpongeDB()
 
 ##########################################################
 # Removes all users in the latest flush post from the
@@ -29,8 +27,9 @@ for sub in subs:
 
 # NPCs are removed, as well.
 for n in NPC:
-    db.remove_player(n)
-    log.info("Removed NPC: " + n)
-
-db.save()
-db.close()
+    try:
+        non_player = Player(n)
+        player.flush()
+        log.info("Removed NPC: " + n)
+    except:
+        pass
