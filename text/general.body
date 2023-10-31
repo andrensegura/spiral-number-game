@@ -1,0 +1,36 @@
+# Welcome! What are ya buyin'?
+-----------------------
+
+Welcome to the Sunday Shop. Use your accumulated pebbles to buy from a small selection of items each Sunday!
+
+* [What is STONE? How do I gain points/pebbles?](https://spiral.bibbleskit.com/about)
+
+* [Check out the leaderboard and your own stats on the website!](https://spiral.bibbleskit.com/leaderboard)
+
+* [Commands list.](https://spiral.bibbleskit.com/commands)
+
+### How it works:
+--------------------------
+
+* **Simply leave a top level comment like so:** `/buy The North Star`. Item names are not case sensitive, but you have to use the proper quotation marks if it's in the name: `'` or `"`
+
+* Unlimited Section: You can buy as many things as you want from here.
+
+* Limited Section: You can buy only ONE item from this section each week.
+
+* The shop remains active all week, until the next shop opens.
+
+# The Goods
+------------------------
+
+## Unlimited Items
+
+Item|Description|Cost|Stock
+:--|:--|--:|--:
+UNLIMITEDITEMS
+
+## Limited Items
+
+Item|Description|Cost|Stock
+:--|:--|--:|--:
+LIMITEDITEMS
