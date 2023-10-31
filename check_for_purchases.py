@@ -26,10 +26,10 @@ def update_sold(post):
 Item|Description|Cost|Stock
 :--|:--|--:|--:
 """
-
-    stock = db.get_forsale_unlimited()
-    for i in stock:
-        body_shop_text += f"{i['name']}|{i['description']}|{i['price']} o|{i['stock']}\n"
+    store_item_ids = db.get_items_with_tag('halloween')
+    unlimited_items = [Item(x) for x in store_item_ids if Item(x).is_unlimited]
+    for i in unlimited_items:
+        body_shop_text += f"{i.name}|{i.description}|{i.price} o|{i.stock}\n"
 
     body_shop_text += """
 
@@ -41,21 +41,21 @@ Item|Description|Cost|Stock
 
     # Update the entire store with the current stock.
     # Cross out the item name if it's not available.
-    stock = db.get_forsale()
+    limited_items = [Item(x) for x in store_item_ids if Item(x).is_limited]
     # sort stock by price
-    stock.sort(key = lambda i: i['price'], reverse = True)
+    limited_items.sort(key = lambda i: i.price, reverse = True)
     # put out of stock items at bottom of list
-    instock = [x for x in stock if x['stock'] > 0]
-    nonstock = [x for x in stock if x['stock'] == 0]
+    instock = [x for x in limited_items if x.stock > 0]
+    nonstock = [x for x in limited_items if x.stock == 0]
     stock = instock + nonstock
 
     # create md format and cross out out of stock items.
     for i in stock:
         # need a copy of the name
-        item_name = i['name']
-        if i['stock'] == 0:
-            item_name = f"~~{i['name']}~~"
-        body_shop_text += f"{item_name}|{i['description']}|{i['price']} o|{i['stock']}\n"
+        item_name = i.name
+        if i.stock == 0:
+            item_name = f"~~{i.name}~~"
+        body_shop_text += f"{item_name}|{i.description}|{i.price} o|{i.stock}\n"
 
     body_full = body_pretext + body_shop_text
     post.edit(body=body_full)
