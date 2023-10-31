@@ -76,7 +76,7 @@ def add_to_banlist(username):
 
 # This could also probably be a database value.
 post = ''
-with open('store_id.txt', 'r') as file:
+with open('text/general.id', 'r') as file:
     sub_id = file.readline()
     post = r.submission(id=sub_id)
 
