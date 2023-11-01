@@ -11,6 +11,13 @@ class Shop:
         self._body = ''
         self._inventory = []
 
+        self._submission_id = ''
+        try:
+            with open(f"{SPONGE_PATH}/text/{self._name}.id", 'r') as file:
+                self._submission_id = file.readline()
+        except:
+            pass
+
         # body text with UNLIMITEDITEMS and LIMITEDITEMS placeholders
         with open(f"{SPONGE_PATH}/text/{name}.body", 'r') as file:
             self._body = file.read()
@@ -54,14 +61,23 @@ class Shop:
     def submit_post(self):
         parlor = r.subreddit(R_SUBREDDIT)
         submission = parlor.submit(title=self._title, selftext=self.body)
+        self._submission_id = str(submission)
 
         with open(f"{SPONGE_PATH}/text/{self._name}.id", 'w') as file:
-            file.write(str(submission))
+            file.write(self._submission_id)
 
     def update_post(self):
         post = ''
-        with open(f"{SPONGE_PATH}/text/{self._name}.id", 'r') as file:
-            submission_id = file.readline()
-            post = r.submission(id=submission_id)
-
+        post = r.submission(id=self._submission_id)
         post.edit(body=self.body)
+
+    def is_banned(self, username: str) -> bool:
+        with open(f"{SPONGE_PATH}/text/{self._name}.banlist", 'r') as banlist:
+            if str(username) in [str(x.strip()) for x in banlist.readlines()]:
+                return True
+            else:
+                return False
+
+    def ban(self, username: str):
+        with open(f"{SPONGE_PATH}/text/{self._name}.banlist", 'a') as banlist:
+           banlist.write(username + '\n')
