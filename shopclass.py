@@ -38,7 +38,7 @@ class Shop:
 
     def set_unlimited_stock(self, amount: int = 10):
         for item in self._inventory:
-            if item.is_unlimited:
+            if item.is_unlimited and item.stock > 10:
                 item.stock = amount
                 item.save()
 
