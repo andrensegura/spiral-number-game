@@ -15,6 +15,10 @@ if custom_flair.ownedby():
         owner - custom_flair
         owner.save()
 
+shop = Shop()
 # GENERAL SHOP
 # Shop class without any arguments is the default shop.
-Shop().submit_post()
+if __name__ == "__main__":
+    shop.submit_post()
+
+
