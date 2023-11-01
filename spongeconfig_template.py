@@ -20,3 +20,6 @@ R_PASSWORD      = "bot password"
 R_CLIENT_SECRET = "reddit client secret"
 R_CLIENT_ID     = "reddit client ID"
 R_USER_AGENT    = "bot description"
+
+# Current active shops
+SHOPS = ['general']
