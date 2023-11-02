@@ -24,7 +24,6 @@ class Player:
         if db_entry['inventory']:
             self._inventory = [Item(int(x)) for x in db_entry['inventory'].split(',')]
         self._score = db_entry['score_7d'] if db_entry['score_7d'] else 0
-        self._score = db_entry['score_7d']
         self._dailysuds = db_entry['dailysuds']
         self._safemode = db_entry['safemode']
         self._safemode_timer = db_entry['safemode_timer']
