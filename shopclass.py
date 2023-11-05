@@ -66,8 +66,8 @@ class Shop:
         with open(f"{SPONGE_PATH}/text/{self._name}.id", 'w') as file:
             file.write(self._submission_id)
 
-        with open(f"{SPONGE_PATH}/text/{self._name}.banlist", 'r') as banlist:
-            file.write('')
+        with open(f"{SPONGE_PATH}/text/{self._name}.banlist", 'w') as banlist:
+            banlist.write('')
 
     def update_post(self):
         post = ''
