@@ -43,16 +43,23 @@ class Shop:
                 item.save()
 
     @property
+    def inventory(self):
+        return sorted(self._inventory, key=lambda x: x.stock, reverse=True)
+        
+
+    @property
     def body(self) -> str:
         unlimited_table = ''
-        for item in self._inventory:
+        for item in self.inventory:
             if item.is_unlimited:
-                unlimited_table += f"{item.name}|{item.description}|{item.price} o|{item.stock}\n"
+                name = item.name if item.stock > 0 else f"~~{item.name}~~"
+                unlimited_table += f"{name}|{item.description}|{item.price} o|{item.stock}\n"
 
         limited_table = ''
-        for item in self._inventory:
+        for item in self.inventory:
             if item.is_limited:
-                limited_table += f"{item.name}|{item.description}|{item.price} o|{item.stock}\n"
+                name = item.name if item.stock > 0 else f"~~{item.name}~~"
+                limited_table += f"{name}|{item.description}|{item.price} o|{item.stock}\n"
 
         full_body = self._body.replace('UNLIMITEDITEMS', unlimited_table)
         full_body = full_body.replace('LIMITEDITEMS', limited_table)
