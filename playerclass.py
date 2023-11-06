@@ -110,8 +110,8 @@ class Player:
         if not item.is_for_sale:
             raise NotForSaleError(f"item '{item.name}' is not for sale")
 
+        # raises OutOfStockError if < 0
         item.stock -= 1
-        item.save()
 
         self - item.price
         self + item

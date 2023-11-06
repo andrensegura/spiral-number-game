@@ -12,11 +12,27 @@ sys.path.append('shops')
 log = SpongeLog("purchases.log")
 
 # Returns an item name if someone uses /buy
-def get_item_from_buy_command(body: str) -> Item:
+def get_item_from_buy_command(body: str, shop) -> Item:
     if body.startswith('/buy '):
         requested_item_name = body.partition('\n')[0][5:]
         i = Item(requested_item_name)
-        return Item(requested_item_name)
+        for shop_item in shop.inventory:
+            if i.name == shop_item.name:
+                return shop_item
+
+def add_comment(comment_id):
+    db = SpongeDB()
+    db.add_comment(comment_id)
+    db.save()
+    db.close()
+    del(db)
+
+def is_comment_added(comment_id):
+    db = SpongeDB()
+    answer = db.is_comment_added(comment_id)
+    db.close()
+    del(db)
+    return answer
 
 for shop_name in SHOPS:
     shop_module = importlib.import_module(f"{shop_name}")
@@ -29,8 +45,11 @@ for shop_name in SHOPS:
     shop_post.comments.replace_more(limit=None)
     for comment in shop_post.comments.list():
         try:
-            item = get_item_from_buy_command(comment.body)
+            if is_comment_added(comment.id):
+                continue
+            item = get_item_from_buy_command(comment.body, shop)
             # None returned means the comment doesn't start with /buy
+            # or item isn't in the shop
             if not item:
                 continue
             purchase_requests.append({'item': item,
@@ -42,8 +61,6 @@ for shop_name in SHOPS:
             continue
 
     # Processes the queue created earlier
-    # Need to include logging for this. Would be easy to add.
-    db = SpongeDB()
     for purchase in purchase_requests:
         item = purchase['item']
         buyer_name = purchase['buyer_name']
@@ -58,32 +75,28 @@ for shop_name in SHOPS:
         try:
             buyer = Player(buyer_name)
     
-            if db.is_comment_added(comment_id):
-                continue
             if item.is_limited and shop.is_banned(buyer.name):
-                db.add_comment(comment_id)
-                db.save()
+                add_comment(comment_id)
                 r.comment(comment_id).reply("> You've already purchased a limited item.") 
                 log.info(f"User already made limited purchase: {buyer_name}")
                 continue
 
-
+            print(f'buying {item.name}!')
+            print(item.stock)
             buyer.buy(item)
             buyer.save()
             item.save()
+            print(item.stock)
 
             r.comment(comment_id).reply(f"> Purchase of '{item.name}' Successful!")
             log.info(f"Item purchased successfully: {buyer.name}, {item.name}")
     
-            db.add_comment(comment_id)
-
             if item.is_limited:
                 shop.ban(buyer.name)
     
         except (OutOfStockError, ItemNonexistantError, NotEnoughSudsError, NotForSaleError) as error:
             r.comment(comment_id).reply(f"> {error}")
 
-        db.add_comment(comment_id)
-        db.save()
+        add_comment(comment_id)
 
     shop.update_post()
