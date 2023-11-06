@@ -109,9 +109,12 @@ class Player:
     def buy(self, item: Item):
         if not item.is_for_sale:
             raise NotForSaleError(f"item '{item.name}' is not for sale")
+
+        item.stock -= 1
+        item.save()
+
         self - item.price
         self + item
-        item.stock -= 1
 
     def save(self):
         db = spongedb.SpongeDB()
