@@ -81,12 +81,9 @@ for shop_name in SHOPS:
                 log.info(f"User already made limited purchase: {buyer_name}")
                 continue
 
-            print(f'buying {item.name}!')
-            print(item.stock)
             buyer.buy(item)
             buyer.save()
             item.save()
-            print(item.stock)
 
             r.comment(comment_id).reply(f"> Purchase of '{item.name}' Successful!")
             log.info(f"Item purchased successfully: {buyer.name}, {item.name}")
