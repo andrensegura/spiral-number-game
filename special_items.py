@@ -13,17 +13,24 @@ log = SpongeLog("calculatepoints.log")
 # will need to be implemented within process_item_bonuses()
 ###############################################################
 
-def item_letter(username, letter, text):
-    points = round((text.lower().count(letter) * 0.01))
-    points = points if points else 1
+def item_letter(letter, text):
+    if not Item(f"the letter {letter}").ownedby():
+        return
+    for ownername in Item(f"the letter {letter}").ownedby():
+        points = round((text.lower().count(letter) * 0.1))
+        points = points if points else 1
 
-    player = Player(username)
-    player + points
-    player.save()
+        player = Player(ownername)
+        player + points
+        player.save()
 
-    log.info("Letter: {}\tPoints: {}\nText: {}".format(letter, points,text.encode('utf-8').lower()))
+        logtext = text.encode('utf-8').lower()
+        log.info(f"Letter: {letter}\tPoints: {points}\nText: {logtext}")
 
 def couch_goblin(username):
+    if username not in Item('couch goblin').ownedby():
+        return
+
     if random.randint(0, 99) > 79:
         points = random.randrange(5, 25, 5)
 
@@ -33,16 +40,13 @@ def couch_goblin(username):
 
         log.info("couch goblin found {} suds!".format(points))
 
-def process_item_bonuses(comment):
-    print("process: item bonus")
+# These are items that are procced for every new comment
+def process_global_items(comment):
     # Special Letters
     for letter in 'spiral':
-        list_of_owners = Item(f"the letter {letter}").ownedby()
-        if not list_of_owners:
-            continue
-        for owner in Item(f"the letter {letter}").ownedby():
-            item_letter(owner, letter, comment.body)
+        item_letter(letter, comment.body)
 
-    # Couch Goblin Grog
-    if comment.author.name in Item('couch goblin').ownedby():
-        couch_goblin(comment.author.name)
+# These are items that are procced when the owner comments
+def process_owned_items(comment):
+    couch_goblin(comment.author.name)
+
