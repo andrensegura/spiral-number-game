@@ -119,7 +119,7 @@ class Player:
     def save(self):
         db = spongedb.SpongeDB()
         db.update_player(self._suds, self.inventory_string(), int(self.safemode),
-                         self._safemode_timer, self._dailysuds, self._name)
+                         self._safemode_timer, self._dailysuds, self._name, self._score)
         db.save()
         db.close()
 
