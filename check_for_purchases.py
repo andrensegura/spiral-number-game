@@ -3,7 +3,7 @@ from reddit_connect import r
 from spongeconfig import SHOPS
 from spongelog import SpongeLog
 from spongedb import *
-from playerclass import Player
+from playerclass import Player, NewPlayer
 from itemclass import Item
 import importlib
 import sys
