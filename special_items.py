@@ -3,6 +3,7 @@ import random
 from spongelog import SpongeLog
 from itemclass import Item
 from playerclass import Player
+from reddit_connect import r
 
 log = SpongeLog("calculatepoints.log")
 
@@ -40,6 +41,12 @@ def couch_goblin(username):
 
         log.info("couch goblin found {} suds!".format(points))
 
+def bibbleskit_plushie():
+    for username in Item("Bibble Plushie").ownedby():
+        player = Player(username)
+        player + 29
+        player.save()
+        
 # These are items that are procced for every new comment
 def process_global_items(comment):
     # Special Letters
@@ -50,3 +57,6 @@ def process_global_items(comment):
 def process_owned_items(comment):
     couch_goblin(comment.author.name)
 
+# Items that run once per day during the pebble calculation:
+def process_daily_items():
+    bibbleskit_plushie()
