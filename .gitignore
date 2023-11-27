@@ -4,3 +4,5 @@ __pycache__
 spongeconfig.py
 banlist.txt
 store_id.txt
+test*
+tmp*
