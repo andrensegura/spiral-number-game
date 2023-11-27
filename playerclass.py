@@ -108,7 +108,7 @@ class Player:
 
     def buy(self, item: Item):
         if not item.is_for_sale:
-            raise NotForSaleError(f"item '{item.name}' is not for sale")
+            raise spongedb.NotForSaleError(f"item '{item.name}' is not for sale")
 
         # raises OutOfStockError if < 0
         item.stock -= 1
