@@ -8,7 +8,7 @@ from spongedb import *
 from spongelog import SpongeLog
 from spongeconfig import R_SUBREDDIT
 
-from playerclass import Player
+from playerclass import Player, NewPlayer
 from itemclass import Item
 
 log = SpongeLog("commands.log")
