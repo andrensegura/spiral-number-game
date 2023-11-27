@@ -72,7 +72,7 @@ class SpongeDB():
     #           it will return all players in the database.
     def get_players(self, limit=-1):
         if isinstance(limit, int):
-	        return self.cur.execute("SELECT * FROM players LIMIT {}".format(limit))
+            return self.cur.execute("SELECT * FROM players LIMIT {}".format(limit))
         else:
             raise ValueError('get_players requires an integer value')
 
