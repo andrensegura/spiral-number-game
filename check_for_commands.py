@@ -1,7 +1,5 @@
 #!/home/sparlor/bin/python
 import shlex
-import traceback
-from datetime import datetime as dt
 from random import randint, choice
 from reddit_connect import r
 from spongedb import *
