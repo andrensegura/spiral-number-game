@@ -34,6 +34,11 @@ class Shop:
         for signifier in item_signifiers:
             item = Item(signifier)
             if item.is_for_sale:
+                # Items that are out of stock should not be for sale.
+                if item.stock == 0:
+                    item._forsale = 0
+                    item.save()
+                    continue
                 self._inventory.append(item)
 
     def set_unlimited_stock(self, amount: int = 10):
