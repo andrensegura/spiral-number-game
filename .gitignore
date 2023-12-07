@@ -10,3 +10,5 @@ test*
 tmp*
 subscribers.txt
 points_algorithm.py
+update_scores.py
+*.sh
