@@ -81,8 +81,9 @@ class Item:
 
     def ownedby(self):
         db = spongedb.SpongeDB()
-        return db.get_player_with_item(self._name)
+        username = db.get_player_with_item(self._name)
         db.close()
+        return username
 
 class NewItem(Item):
 
