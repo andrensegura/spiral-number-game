@@ -26,6 +26,7 @@ def grant_points_to_player(username: str, points: int):
     player + points
     player.dailysuds += points
     player.save()
+    del(player)
 
 def is_submission_added(submission_id: str) -> bool:
     db = SpongeDB()
@@ -63,7 +64,7 @@ def iterate_points():
                 continue
 
             points = points_algorithm.comment_point_value(comment)
-            grant_points_to_player(submission.author.name, points)
+            grant_points_to_player(comment.author.name, points)
 
             special_items.process_owned_items(comment)
             special_items.process_global_items(comment)
