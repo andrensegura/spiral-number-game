@@ -19,6 +19,7 @@ shop = Shop()
 # GENERAL SHOP
 # Shop class without any arguments is the default shop.
 if __name__ == "__main__":
+    shop.clear_out_of_stock()
     shop.submit_post()
 
 
