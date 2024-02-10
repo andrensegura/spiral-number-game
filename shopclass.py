@@ -35,11 +35,17 @@ class Shop:
             item = Item(signifier)
             if item.is_for_sale:
                 # Items that are out of stock should not be for sale.
-                if item.stock == 0:
-                    item._forsale = 0
-                    item.save()
-                    continue
+                #if item.stock == 0:
+                #    item._forsale = 0
+                #    item.save()
+                #    continue
                 self._inventory.append(item)
+
+    def clear_out_of_stock(self):
+        for item in self._inventory:
+            if item.stock == 0:
+                item._forsale = 0
+                item.save()
 
     def set_unlimited_stock(self, amount: int = 10):
         for item in self._inventory:
